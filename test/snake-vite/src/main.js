@@ -120,6 +120,9 @@ function loadWidget() {
       Babysit.init({
         trigger: '/',
         server: 'http://localhost:5678',
+        repo: 'whadar/babysit',
+        position: 'left',
+        autoOpen: true,
         button: true,
         context: () => window.__snakeState?.() ?? {},
       })

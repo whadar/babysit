@@ -41,7 +41,7 @@ app.post("/report", async (req, res) => {
     return res.status(429).json({ error: "rate limit exceeded" })
   }
 
-  const { prompt, screenshot, context, meta } = req.body
+  const { prompt, screenshot, context, repo, meta } = req.body
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   const dir = path.resolve(process.cwd(), "babysit")
@@ -76,7 +76,7 @@ app.post("/report", async (req, res) => {
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress
     const userAgent = req.headers["user-agent"]
     const enrichedMeta = { ...meta, ip, userAgent }
-    const result = await createIssue({ prompt, screenshot, context, meta: enrichedMeta })
+    const result = await createIssue({ prompt, screenshot, context, repo, meta: enrichedMeta })
 
     console.log(`[babysit] issue created: ${result.issueUrl}`)
     res.json({ issueUrl: result.issueUrl, issueNumber: result.issueNumber })

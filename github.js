@@ -12,7 +12,7 @@ if (!repoStr) {
   process.exit(1)
 }
 
-const [owner, repo] = repoStr.split("/")
+const [envOwner, envRepo] = repoStr.split("/")
 const octokit = new Octokit({ auth: token })
 
 function inferLabel(prompt) {
@@ -73,7 +73,7 @@ function formatBody({ prompt, context, meta, screenshotUrl }) {
   return body
 }
 
-async function uploadScreenshot(dataUrl, issueNumber) {
+async function uploadScreenshot(dataUrl, issueNumber, owner, repo) {
   const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "")
   const ext = dataUrl.startsWith("data:image/png") ? "png" : "jpg"
   const filepath = `babysit-screenshots/${Date.now()}-${issueNumber}.${ext}`
@@ -88,14 +88,15 @@ async function uploadScreenshot(dataUrl, issueNumber) {
   return data.content.download_url
 }
 
-async function createIssue({ prompt, screenshot, context, meta, ip }) {
+async function createIssue({ prompt, screenshot, context, repo: payloadRepo, meta, ip }) {
   if (ip) meta = { ...meta, ip }
+  const [owner, repo] = payloadRepo ? payloadRepo.split("/") : [envOwner, envRepo]
   const label = inferLabel(prompt)
 
   let screenshotUrl = null
   if (screenshot) {
     try {
-      screenshotUrl = await uploadScreenshot(screenshot, "pending")
+      screenshotUrl = await uploadScreenshot(screenshot, "pending", owner, repo)
       console.log(`[babysit] screenshot uploaded: ${screenshotUrl}`)
     } catch (err) {
       console.error("[babysit] screenshot upload failed — token needs contents:write permission:", err.message)

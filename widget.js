@@ -1,11 +1,14 @@
 ;(function () {
   const DEFAULT_SERVER = "http://localhost:5678"
   const DEFAULT_TRIGGER = "/"
+  const VERSION = "0.2.5"
 
   let config = {
     trigger: DEFAULT_TRIGGER,
     server: DEFAULT_SERVER,
     secret: null,
+    repo: null,
+    position: "bottom",
     autoOpen: false,
     button: false,
     contextFns: [],
@@ -56,32 +59,39 @@
     if (active) return
     active = true
 
+    const pos = config.position || "bottom"
+    const posStyles = {
+      bottom: "bottom:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-end;",
+      top:    "top:0;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;",
+      left:   "top:0;left:0;bottom:0;display:flex;justify-content:flex-start;align-items:center;",
+      right:  "top:0;right:0;bottom:0;display:flex;justify-content:flex-end;align-items:center;",
+    }
     overlayEl = document.createElement("div")
     overlayEl.id = "__babysit_overlay"
     overlayEl.style.cssText = `
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      ${posStyles[pos] || posStyles.bottom}
       z-index: 999999;
-      display: flex;
-      justify-content: center;
       padding: 16px;
       font-family: system-ui, sans-serif;
-      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+      background: rgba(0,0,0,0.3);
     `
 
+    const boxStyles = {
+      bottom: "border-radius:10px 10px 8px 8px; box-shadow:0 -4px 24px rgba(0,0,0,0.5); width:560px; max-width:100%;",
+      top:    "border-radius:8px 8px 10px 10px; box-shadow:0 4px 24px rgba(0,0,0,0.5); width:560px; max-width:100%;",
+      left:   "border-radius:8px 10px 10px 8px; box-shadow:4px 0 24px rgba(0,0,0,0.5); width:300px;",
+      right:  "border-radius:10px 8px 8px 10px; box-shadow:-4px 0 24px rgba(0,0,0,0.5); width:300px;",
+    }
     const box = document.createElement("div")
     box.style.cssText = `
       background: #1a1a1a;
       border: 1px solid #333;
-      border-radius: 10px 10px 8px 8px;
+      ${boxStyles[pos] || boxStyles.bottom}
       padding: 16px 20px;
-      width: 560px;
-      max-width: 100%;
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
     `
 
     const label = document.createElement("div")
-    label.textContent = "babysit"
     label.style.cssText = `
       font-size: 11px;
       font-weight: 600;
@@ -89,7 +99,34 @@
       text-transform: uppercase;
       color: #888;
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     `
+    const labelTitle = document.createElement("span")
+    labelTitle.textContent = "babysit"
+    label.appendChild(labelTitle)
+    if (config.repo) {
+      const sep = document.createElement("span")
+      sep.textContent = "→"
+      sep.style.cssText = "color: #555; font-weight: 400;"
+      label.appendChild(sep)
+      const repoLink = document.createElement("a")
+      repoLink.href = `https://github.com/${config.repo}/issues`
+      repoLink.target = "_blank"
+      repoLink.rel = "noopener noreferrer"
+      repoLink.textContent = config.repo
+      repoLink.style.cssText = `
+        color: #666;
+        text-decoration: none;
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        transition: color 0.15s;
+      `
+      repoLink.addEventListener("mouseenter", () => { repoLink.style.color = "#aaa" })
+      repoLink.addEventListener("mouseleave", () => { repoLink.style.color = "#666" })
+      label.appendChild(repoLink)
+    }
 
     const input = document.createElement("textarea")
     input.placeholder = "Describe the issue or what to fix..."
@@ -107,18 +144,25 @@
       box-sizing: border-box;
     `
 
-    const hint = document.createElement("div")
-    hint.textContent = "Enter to send · Esc to cancel"
-    hint.style.cssText = `
-      font-size: 11px;
-      color: #555;
+    const footer = document.createElement("div")
+    footer.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-top: 8px;
-      text-align: right;
     `
+    const versionLabel = document.createElement("span")
+    versionLabel.textContent = `v${VERSION}`
+    versionLabel.style.cssText = "font-size: 10px; color: #444;"
+    const hint = document.createElement("span")
+    hint.textContent = "Enter to send · Esc to cancel"
+    hint.style.cssText = "font-size: 10px; color: #555;"
+    footer.appendChild(versionLabel)
+    footer.appendChild(hint)
 
     box.appendChild(label)
     box.appendChild(input)
-    box.appendChild(hint)
+    box.appendChild(footer)
     overlayEl.appendChild(box)
     document.body.appendChild(overlayEl)
 
@@ -211,6 +255,7 @@
       prompt,
       screenshot: pendingScreenshot || null,
       context: collectContext(),
+      repo: config.repo || undefined,
       meta: {
         url: location.href,
         timestamp: new Date().toISOString(),
@@ -311,6 +356,8 @@
       if (opts.trigger) config.trigger = opts.trigger
       if (opts.server) config.server = opts.server
       if (opts.secret) config.secret = opts.secret
+      if (opts.repo) config.repo = opts.repo
+      if (opts.position) config.position = opts.position
       if (opts.autoOpen) config.autoOpen = opts.autoOpen
       if (opts.button) config.button = opts.button
       if (opts.context) config.contextFns.push(opts.context)
