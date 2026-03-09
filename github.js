@@ -1,4 +1,6 @@
 const { Octokit } = require("@octokit/rest")
+const fs = require("fs")
+const path = require("path")
 
 const token = process.env.GITHUB_TOKEN
 const repoStr = process.env.GITHUB_REPO
@@ -69,19 +71,14 @@ function formatBody({ prompt, context, meta }) {
   return body
 }
 
-async function uploadScreenshot(dataUrl, issueNumber) {
+function saveScreenshot(dataUrl, issueNumber) {
   const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "")
   const ext = dataUrl.startsWith("data:image/png") ? "png" : "jpg"
-  const filename = `babysit-screenshots/${Date.now()}-${issueNumber}.${ext}`
-
-  const { data } = await octokit.repos.createOrUpdateFileContents({
-    owner, repo,
-    path: filename,
-    message: `babysit: screenshot for #${issueNumber}`,
-    content: base64,
-  })
-
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${data.commit.sha}/${filename}`
+  const filename = `${Date.now()}-${issueNumber}.${ext}`
+  const dir = path.resolve(process.cwd(), "babysit-screenshots")
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, filename), Buffer.from(base64, "base64"))
+  return { filename, ext }
 }
 
 async function createIssue({ prompt, screenshot, context, meta, ip }) {
@@ -97,18 +94,21 @@ async function createIssue({ prompt, screenshot, context, meta, ip }) {
 
   if (screenshot) {
     try {
-      const imageUrl = await uploadScreenshot(screenshot, issue.number)
+      const { filename } = saveScreenshot(screenshot, issue.number)
+      const port = process.env.BABYSIT_PORT || 5678
+      const imageUrl = `http://localhost:${port}/screenshots/${filename}`
       await octokit.issues.createComment({
         owner, repo,
         issue_number: issue.number,
         body: `### Screenshot\n![screenshot](${imageUrl})`,
       })
+      console.log(`[babysit] screenshot saved: ${imageUrl}`)
     } catch (err) {
-      console.error("[babysit] screenshot upload failed:", err.message)
+      console.error("[babysit] screenshot failed:", err.message)
     }
   }
 
   return { issueUrl: issue.html_url, issueNumber: issue.number }
 }
 
-module.exports = { createIssue }
+module.exports = { createIssue, saveScreenshot }
