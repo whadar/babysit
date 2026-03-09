@@ -126,7 +126,7 @@ Point the widget at your Worker URL:
 | `GITHUB_TOKEN` | ✓ | Personal access token with `repo` scope (or fine-grained: `issues:write` + `contents:write`) |
 | `GITHUB_REPO` | ✓ | Target repo in `owner/repo` format |
 | `BABYSIT_PORT` | — | Server port (default: `5678`) |
-| `BABYSIT_SECRET` | — | Shared secret — widget must send matching `x-babysit-secret` header |
+| `BABYSIT_SECRET` | — | Shared secret — widget must send matching `x-babysit-secret` header. Prevents casual abuse but is visible in client JS — not a substitute for user auth. |
 
 ---
 
