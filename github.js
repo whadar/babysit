@@ -85,7 +85,7 @@ async function uploadScreenshot(dataUrl, issueNumber) {
     content: base64,
   })
 
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${data.commit.sha}/${filepath}`
+  return data.content.download_url
 }
 
 async function createIssue({ prompt, screenshot, context, meta, ip }) {
