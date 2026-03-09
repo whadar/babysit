@@ -273,7 +273,7 @@
     if (document.getElementById("__babysit_btn")) return
     const btn = document.createElement("button")
     btn.id = "__babysit_btn"
-    btn.textContent = "🐛"
+    btn.textContent = "🍼"
     btn.title = "Report issue"
     btn.style.cssText = `
       position: fixed;

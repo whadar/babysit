@@ -120,6 +120,7 @@ function loadWidget() {
       Babysit.init({
         trigger: '/',
         server: 'http://localhost:5678',
+        button: true,
         context: () => window.__snakeState?.() ?? {},
       })
       console.log('[babysit] widget ready')

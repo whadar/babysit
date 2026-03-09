@@ -1,6 +1,6 @@
 {
   "name": "babysit",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Press / in your browser to file a GitHub issue with screenshot and app state — straight from your dev session.",
   "main": "index.js",
   "bin": {
