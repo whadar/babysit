@@ -251,8 +251,9 @@
 
   document.addEventListener("keydown", function (e) {
     if (active) return
+    const triggerCode = config.trigger === "/" ? "Slash" : null
     if (
-      e.key === config.trigger &&
+      (e.key === config.trigger || (triggerCode && e.code === triggerCode)) &&
       !e.ctrlKey &&
       !e.metaKey &&
       !e.altKey &&
