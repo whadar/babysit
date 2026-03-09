@@ -5,6 +5,7 @@
   let config = {
     trigger: DEFAULT_TRIGGER,
     server: DEFAULT_SERVER,
+    secret: null,
     contextFns: [],
   }
 
@@ -216,9 +217,12 @@
       },
     }
 
+    const headers = { "Content-Type": "application/json" }
+    if (config.secret) headers["x-babysit-secret"] = config.secret
+
     fetch(config.server + "/report", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     })
       .then((res) => res.json().then((data) => ({ ok: res.ok, status: res.status, data })))
@@ -226,6 +230,12 @@
         if (ok && data.issueUrl) {
           console.log("[babysit] issue:", data.issueUrl)
           showIssueToast(data.issueNumber, data.issueUrl)
+        } else if (status === 401) {
+          console.error("[babysit] unauthorized — check BABYSIT_SECRET")
+          showToast("✗ unauthorized", "#2e1a1a")
+        } else if (status === 429) {
+          console.warn("[babysit] rate limit exceeded")
+          showToast("✗ rate limit exceeded", "#2e1a1a")
         } else {
           console.warn("[babysit] server responded with", status)
           showToast("✗ server error " + status, "#2e1a1a")
@@ -260,6 +270,7 @@
     init(opts) {
       if (opts.trigger) config.trigger = opts.trigger
       if (opts.server) config.server = opts.server
+      if (opts.secret) config.secret = opts.secret
       if (opts.context) config.contextFns.push(opts.context)
     },
     addContext(fn) {

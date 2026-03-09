@@ -9,8 +9,38 @@ app.use(cors())
 app.use(express.json({ limit: "50mb" }))
 
 const PORT = process.env.BABYSIT_PORT || 5678
+const SECRET = process.env.BABYSIT_SECRET
+
+const rateLimitMap = new Map()
+const RATE_LIMIT = 10
+const RATE_WINDOW_MS = 60 * 1000
+
+function isRateLimited(ip) {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip) || { count: 0, start: now }
+  if (now - entry.start > RATE_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, start: now })
+    return false
+  }
+  if (entry.count >= RATE_LIMIT) return true
+  entry.count++
+  rateLimitMap.set(ip, entry)
+  return false
+}
 
 app.post("/report", async (req, res) => {
+  if (SECRET) {
+    const provided = req.headers["x-babysit-secret"]
+    if (provided !== SECRET) {
+      return res.status(401).json({ error: "unauthorized" })
+    }
+  }
+
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: "rate limit exceeded" })
+  }
+
   const { prompt, screenshot, context, meta } = req.body
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")

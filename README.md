@@ -50,6 +50,7 @@ Add the widget to your app's dev HTML:
   Babysit.init({
     trigger: "/",
     server: "http://localhost:5678",
+    secret: "your-secret-here", // must match BABYSIT_SECRET on the server
     context: () => ({ /* optional app state */ })
   })
 </script>
@@ -85,6 +86,7 @@ browser widget  →  POST /report  →  github.js  →  GitHub Issue
 | `GITHUB_TOKEN` | ✓ | Personal access token with `repo` scope (or fine-grained: `issues:write` + `contents:write`) |
 | `GITHUB_REPO` | ✓ | Target repo in `owner/repo` format |
 | `BABYSIT_PORT` | — | Server port (default: `5678`) |
+| `BABYSIT_SECRET` | — | Shared secret — widget must send matching `x-babysit-secret` header |
 
 ---
 
