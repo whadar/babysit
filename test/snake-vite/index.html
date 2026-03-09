@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Baby Snake</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="label">Baby Snake</div>
+    <canvas id="c"></canvas>
+    <div id="hud">Score: <span id="score">0</span> &nbsp;|&nbsp; High: <span id="high">0</span></div>
+    <div id="msg">Arrow keys or WASD to move</div>
+    <div id="version">v0.0.0</div>
+    <script>
+      document.fonts.ready.then(() => document.body.style.visibility = 'visible')
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
