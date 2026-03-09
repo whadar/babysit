@@ -22,30 +22,24 @@ Trigger a workflow on every new Babysit issue to auto-triage, ping your team, or
 
 ## Setup
 
-```bash
-npm install
-```
-
-Create a `.env` file:
+Create a `.env` file in your project root:
 
 ```
 GITHUB_TOKEN=ghp_your_token_here
 GITHUB_REPO=owner/repo
 ```
 
-`BABYSIT_SECRET` is optional for local dev — omit it and the server accepts all requests.
-
-The token needs the `repo` scope (to create issues, labels, and upload screenshots).
-
 For fine-grained tokens, enable **Issues: Read & Write** and **Contents: Read & Write** on the target repo.
+
+`BABYSIT_SECRET` is optional for local dev — omit it and the server accepts all requests.
 
 Start the server:
 
 ```bash
-npm start
+npx babysit
 ```
 
-Add the widget to your app's dev HTML:
+Add the widget to your app's HTML:
 
 ```html
 <script src="http://localhost:5678/widget.js"></script>
@@ -56,6 +50,12 @@ Add the widget to your app's dev HTML:
     context: () => ({ /* optional app state */ })
   })
 </script>
+```
+
+Or load directly from npm via unpkg (no local server required for the script tag):
+
+```html
+<script src="https://unpkg.com/babysit/widget.js"></script>
 ```
 
 ---
@@ -123,7 +123,7 @@ npm run deploy
 **6. Add the widget to your app:**
 
 ```html
-<script src="https://babysit-myapp.your-subdomain.workers.dev/widget.js"></script>
+<script src="https://unpkg.com/babysit/widget.js"></script>
 <script>
   Babysit.init({
     trigger: "/",

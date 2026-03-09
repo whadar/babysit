@@ -6,8 +6,28 @@
   "bin": {
     "babysit": "./index.js"
   },
+  "files": [
+    "index.js",
+    "server.js",
+    "github.js",
+    "widget.js"
+  ],
   "scripts": {
-    "start": "node --env-file=.env index.js"
+    "start": "node index.js"
+  },
+  "keywords": [
+    "github",
+    "issues",
+    "bug-reporting",
+    "screenshot",
+    "devtools",
+    "feedback"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/whadar/babysit#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whadar/babysit.git"
   },
   "dependencies": {
     "@octokit/rest": "^21.0.0",

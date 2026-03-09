@@ -180,7 +180,7 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/widget.js") {
-      return fetch("https://cdn.jsdelivr.net/gh/whadar/babysit@main/widget.js", {
+      return fetch("https://unpkg.com/babysit/widget.js", {
         headers: { "Cache-Control": "no-cache" },
       }).then(res => new Response(res.body, {
         headers: {
