@@ -85,39 +85,56 @@ browser widget  →  POST /report  →  server.js / worker  →  GitHub Issue
 
 ## Deploying to production (Cloudflare Worker)
 
-For beta users or static frontends with no backend, deploy the included Worker:
+For beta users or static frontends with no backend, deploy the included Worker.
+
+**1. Create a GitHub token** for the target repo with fine-grained permissions:
+- Issues: Read & Write
+- Contents: Read & Write
+
+**2. Install wrangler:**
 
 ```bash
 cd worker
 npm install
 ```
 
-Set your secrets:
+**3. Edit `worker/wrangler.toml`** — set `name` and `GITHUB_REPO` to your target repo:
+
+```toml
+name = "babysit-myapp"
+
+[vars]
+GITHUB_REPO = "your-org/your-app-repo"
+```
+
+**4. Set secrets:**
 
 ```bash
 npx wrangler secret put GITHUB_TOKEN
 npx wrangler secret put BABYSIT_SECRET
 ```
 
-Update `GITHUB_REPO` in `worker/wrangler.toml`, then deploy:
+**5. Deploy:**
 
 ```bash
 npm run deploy
 ```
 
-Point the widget at your Worker URL:
+**6. Add the widget to your app:**
 
 ```html
-<script src="https://your-worker.workers.dev/widget.js"></script>
+<script src="https://babysit-myapp.your-subdomain.workers.dev/widget.js"></script>
 <script>
   Babysit.init({
     trigger: "/",
-    server: "https://your-worker.workers.dev",
+    server: "https://babysit-myapp.your-subdomain.workers.dev",
     secret: "your-secret-here",
     context: () => ({ /* optional app state */ })
   })
 </script>
 ```
+
+> **One Worker per repo.** Each Worker targets a single `GITHUB_REPO`. To use Babysit across multiple projects, deploy a separate Worker for each with a unique `name` in `wrangler.toml`.
 
 ---
 
