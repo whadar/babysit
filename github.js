@@ -69,6 +69,21 @@ function formatBody({ prompt, context, meta }) {
   return body
 }
 
+async function uploadScreenshot(dataUrl, issueNumber) {
+  const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "")
+  const ext = dataUrl.startsWith("data:image/png") ? "png" : "jpg"
+  const filename = `babysit-screenshots/${Date.now()}-${issueNumber}.${ext}`
+
+  const { data } = await octokit.repos.createOrUpdateFileContents({
+    owner, repo,
+    path: filename,
+    message: `babysit: screenshot for #${issueNumber}`,
+    content: base64,
+  })
+
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${data.commit.sha}/${filename}`
+}
+
 async function createIssue({ prompt, screenshot, context, meta, ip }) {
   if (ip) meta = { ...meta, ip }
   const label = inferLabel(prompt)
@@ -81,11 +96,16 @@ async function createIssue({ prompt, screenshot, context, meta, ip }) {
   })
 
   if (screenshot) {
-    await octokit.issues.createComment({
-      owner, repo,
-      issue_number: issue.number,
-      body: `### Screenshot\n![screenshot](${screenshot})`,
-    })
+    try {
+      const imageUrl = await uploadScreenshot(screenshot, issue.number)
+      await octokit.issues.createComment({
+        owner, repo,
+        issue_number: issue.number,
+        body: `### Screenshot\n![screenshot](${imageUrl})`,
+      })
+    } catch (err) {
+      console.error("[babysit] screenshot upload failed:", err.message)
+    }
   }
 
   return { issueUrl: issue.html_url, issueNumber: issue.number }
