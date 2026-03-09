@@ -6,6 +6,8 @@
     trigger: DEFAULT_TRIGGER,
     server: DEFAULT_SERVER,
     secret: null,
+    autoOpen: false,
+    button: false,
     contextFns: [],
   }
 
@@ -266,12 +268,58 @@
     }
   })
 
+  function showButton() {
+    if (document.getElementById("__babysit_btn")) return
+    const btn = document.createElement("button")
+    btn.id = "__babysit_btn"
+    btn.textContent = "Report issue"
+    btn.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999998;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #ccc;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      transition: background 0.15s, border-color 0.15s;
+    `
+    btn.addEventListener("mouseenter", () => { btn.style.background = "#222"; btn.style.borderColor = "#666" })
+    btn.addEventListener("mouseleave", () => { btn.style.background = "#1a1a1a"; btn.style.borderColor = "#444" })
+    btn.addEventListener("click", () => {
+      if (active) return
+      pendingScreenshot = null
+      captureScreenshot().then((dataUrl) => {
+        pendingScreenshot = dataUrl
+        showOverlay()
+      })
+    })
+    document.body.appendChild(btn)
+  }
+
   window.Babysit = {
     init(opts) {
       if (opts.trigger) config.trigger = opts.trigger
       if (opts.server) config.server = opts.server
       if (opts.secret) config.secret = opts.secret
+      if (opts.autoOpen) config.autoOpen = opts.autoOpen
+      if (opts.button) config.button = opts.button
       if (opts.context) config.contextFns.push(opts.context)
+
+      if (config.button) showButton()
+      if (config.autoOpen) {
+        pendingScreenshot = null
+        captureScreenshot().then((dataUrl) => {
+          pendingScreenshot = dataUrl
+          showOverlay()
+        })
+      }
     },
     addContext(fn) {
       config.contextFns.push(fn)

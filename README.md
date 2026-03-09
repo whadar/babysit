@@ -62,7 +62,7 @@ Add the widget to your app's dev HTML:
 
 ## Usage
 
-- Press `/` in your browser → overlay appears
+- Press `/` in your browser → overlay appears (or click the floating button if `button: true`)
 - Type your prompt (first line becomes the issue title) → Enter to send
 - A toast appears: `✓ #42 opened →` — click to go directly to the issue
 
@@ -146,6 +146,17 @@ npm run deploy
 | `GITHUB_REPO` | ✓ | Target repo in `owner/repo` format |
 | `BABYSIT_PORT` | — | Server port (default: `5678`) |
 | `BABYSIT_SECRET` | — | Shared secret — widget must send matching `x-babysit-secret` header. Prevents casual abuse but is visible in client JS — not a substitute for user auth. |
+
+### Widget options (`Babysit.init`)
+
+| Option | Default | Description |
+|---|---|---|
+| `server` | `http://localhost:5678` | URL of the Babysit server or Worker |
+| `trigger` | `/` | Key that opens the overlay |
+| `secret` | — | Must match `BABYSIT_SECRET` on the server |
+| `autoOpen` | `false` | Open the overlay automatically on page load |
+| `button` | `false` | Show a persistent floating "Report issue" button |
+| `context` | — | Function returning app state to attach to every report |
 
 ---
 
