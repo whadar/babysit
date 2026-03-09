@@ -36,7 +36,7 @@ function parseOS(ua) {
   return "unknown"
 }
 
-function formatBody({ prompt, context, meta }) {
+function formatBody({ prompt, context, meta, screenshotUrl }) {
   if (prompt) {
     const lines = prompt.split("\n")
     if (lines.length > 1) {
@@ -65,6 +65,10 @@ function formatBody({ prompt, context, meta }) {
     body += `\n### Details\n${prompt}\n`
   }
 
+  if (screenshotUrl) {
+    body += `\n### Screenshot\n![screenshot](${screenshotUrl})\n`
+  }
+
   body += `\n---\n*submitted via Babysit*`
   return body
 }
@@ -88,26 +92,22 @@ async function createIssue({ prompt, screenshot, context, meta, ip }) {
   if (ip) meta = { ...meta, ip }
   const label = inferLabel(prompt)
 
-  const { data: issue } = await octokit.issues.create({
-    owner, repo,
-    title: prompt.split("\n")[0].slice(0, 72),
-    body: formatBody({ prompt, context, meta }),
-    labels: ["babysit", label],
-  })
-
+  let screenshotUrl = null
   if (screenshot) {
     try {
-      const imageUrl = await uploadScreenshot(screenshot, issue.number)
-      await octokit.issues.createComment({
-        owner, repo,
-        issue_number: issue.number,
-        body: `### Screenshot\n![screenshot](${imageUrl})`,
-      })
-      console.log(`[babysit] screenshot uploaded: ${imageUrl}`)
+      screenshotUrl = await uploadScreenshot(screenshot, "pending")
+      console.log(`[babysit] screenshot uploaded: ${screenshotUrl}`)
     } catch (err) {
       console.error("[babysit] screenshot upload failed — token needs contents:write permission:", err.message)
     }
   }
+
+  const { data: issue } = await octokit.issues.create({
+    owner, repo,
+    title: prompt.split("\n")[0].slice(0, 72),
+    body: formatBody({ prompt, context, meta, screenshotUrl }),
+    labels: ["babysit", label],
+  })
 
   return { issueUrl: issue.html_url, issueNumber: issue.number }
 }
