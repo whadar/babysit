@@ -273,26 +273,28 @@
     if (document.getElementById("__babysit_btn")) return
     const btn = document.createElement("button")
     btn.id = "__babysit_btn"
-    btn.textContent = "Report issue"
+    btn.textContent = "🐛"
+    btn.title = "Report issue"
     btn.style.cssText = `
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 16px;
+      left: 16px;
       z-index: 999998;
-      background: #1a1a1a;
-      border: 1px solid #444;
-      border-radius: 8px;
-      color: #ccc;
-      font-family: system-ui, sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 8px 14px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      line-height: 32px;
+      text-align: center;
       cursor: pointer;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-      transition: background 0.15s, border-color 0.15s;
+      padding: 0;
+      opacity: 0.6;
+      transition: opacity 0.15s;
     `
-    btn.addEventListener("mouseenter", () => { btn.style.background = "#222"; btn.style.borderColor = "#666" })
-    btn.addEventListener("mouseleave", () => { btn.style.background = "#1a1a1a"; btn.style.borderColor = "#444" })
+    btn.addEventListener("mouseenter", () => { btn.style.opacity = "1" })
+    btn.addEventListener("mouseleave", () => { btn.style.opacity = "0.6" })
     btn.addEventListener("click", () => {
       if (active) return
       pendingScreenshot = null
