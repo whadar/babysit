@@ -12,6 +12,25 @@
 
   let overlayEl = null
   let active = false
+  let pendingScreenshot = null
+
+  function loadHtml2Canvas() {
+    return new Promise((resolve, reject) => {
+      if (window.html2canvas) return resolve(window.html2canvas)
+      const s = document.createElement("script")
+      s.src = config.server + "/html2canvas.min.js"
+      s.onload = () => resolve(window.html2canvas)
+      s.onerror = () => reject(new Error("failed to load html2canvas"))
+      document.head.appendChild(s)
+    })
+  }
+
+  function captureScreenshot() {
+    return loadHtml2Canvas()
+      .then((h2c) => h2c(document.body, { useCORS: true, scale: 1, logging: false }))
+      .then((canvas) => canvas.toDataURL("image/jpeg", 0.75))
+      .catch(() => null)
+  }
 
   function collectContext() {
     return config.contextFns.reduce((acc, fn) => {
@@ -180,7 +199,7 @@
 
     const payload = {
       prompt,
-      screenshot: null,
+      screenshot: pendingScreenshot || null,
       context: collectContext(),
       meta: {
         url: location.href,
@@ -222,7 +241,11 @@
       document.activeElement.tagName !== "TEXTAREA"
     ) {
       e.preventDefault()
-      showOverlay()
+      pendingScreenshot = null
+      captureScreenshot().then((dataUrl) => {
+        pendingScreenshot = dataUrl
+        showOverlay()
+      })
     }
   })
 

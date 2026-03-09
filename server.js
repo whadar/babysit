@@ -60,6 +60,10 @@ app.get("/widget.js", (req, res) => {
   res.sendFile(path.resolve(__dirname, "widget.js"))
 })
 
+app.get("/html2canvas.min.js", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "node_modules/html2canvas/dist/html2canvas.min.js"))
+})
+
 app.listen(PORT, () => {
   console.log(`[babysit] server running on http://localhost:${PORT}`)
 })
