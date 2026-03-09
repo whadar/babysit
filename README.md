@@ -3,8 +3,7 @@
 > Press `/` in your browser to file a GitHub issue with screenshot and app state — straight from your dev session.
 
 ## Demo
-[![Project walkthrough]([<img width="821" height="476" alt="image" src="https://github.com/user-attachments/assets/cc159455-1514-49ed-b82d-3b32ba449b83" />](https://www.loom.com/share/7880d391450a470bbb2fd6f5297e9f51)]
-
+[![Project walkthrough](https://github.com/user-attachments/assets/cc159455-1514-49ed-b82d-3b32ba449b83)](https://www.loom.com/share/7880d391450a470bbb2fd6f5297e9f51)
 ## Why
 
 You're testing your app and something's off. You could switch to your IDE/CLI, describe the problem, wait for a fix, and reload — but now you've lost your train of thought and your place in the app.
