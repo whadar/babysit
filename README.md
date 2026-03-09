@@ -2,9 +2,19 @@
 
 > Press `/` in your browser to file a GitHub issue with screenshot and app state — straight from your dev session.
 
-You're running your app in the browser. You spot something — a bug, a layout issue, a state you want to act on. You hit `/`, type a prompt, and Babysit captures it + your app state and files a GitHub issue. No context switch, no new conversation, no describing what you're looking at.
+## Why
 
-Multiple reports in the same browser session are grouped as comments on the same issue.
+You're testing your app and something's off. You could switch to your IDE, describe the problem, wait for a fix, and reload — but now you've lost your train of thought and your place in the app.
+
+Babysit keeps you in the flow. Press `/`, type what you see, and it captures your note alongside a screenshot and any custom app state you care about. The report lands in a GitHub Issue automatically — no tab switching, no context lost.
+
+## For beta users too
+
+Ship the same widget to your beta users and let them report issues directly from inside the app. Every submission is a labeled GitHub Issue with full visual context — no more "it's broken on my screen" emails with no screenshot.
+
+## Auto-fixing with GitHub Actions
+
+Trigger a workflow on every new Babysit issue to auto-triage, ping your team, or have Claude take a first pass at the fix.
 
 ---
 
@@ -47,10 +57,8 @@ Add the widget to your app's dev HTML:
 ## Usage
 
 - Press `/` in your browser → overlay appears
-- First submission: edit the issue title (defaults to `Babysit [Mar 9, 11:14]`)
-- Type your prompt → Enter to send
-- A toast appears: `✓ #42 opened →` (clickable link to the issue)
-- Subsequent prompts in the same session add comments to the same issue
+- Type your prompt (first line becomes the issue title) → Enter to send
+- A toast appears: `✓ #42 opened →` — click to go directly to the issue
 
 ---
 
@@ -58,12 +66,12 @@ Add the widget to your app's dev HTML:
 
 ```
 browser widget  →  POST /report  →  github.js  →  GitHub Issue
-(widget.js)        (server.js)      (octokit)      + comments per session
+(widget.js)        (server.js)      (octokit)
 ```
 
 - `widget.js` — single script tag, no dependencies
-- `server.js` — Express server, manages sessions, writes local `.md` backups
-- `github.js` — octokit issue + comment creation, label inference
+- `server.js` — Express server, writes local `.md` backups
+- `github.js` — octokit issue creation, label inference
 
 ---
 
