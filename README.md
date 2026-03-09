@@ -1,11 +1,12 @@
 # Babysit
 
 > Press `/` in your browser to file a GitHub issue with screenshot and app state — straight from your dev session.
+
 <img width="823" height="832" alt="image" src="https://github.com/user-attachments/assets/0b7734dc-b919-4eb7-b9e7-48bda4864e70" />
 
 ## Why
 
-You're testing your app and something's off. You could switch to your IDE/CLI, describe the problem, wait for a fix, and reload but now you've lost your train of thought and your place in the app.
+You're testing your app and something's off. You could switch to your IDE/CLI, describe the problem, wait for a fix, and reload — but now you've lost your train of thought and your place in the app.
 
 Babysit keeps you in the flow. Press `/`, type what you see, and it captures your note alongside a screenshot and any custom app state you care about. The report lands in a GitHub Issue automatically — no tab switching, no context lost.
 
@@ -30,6 +31,7 @@ Create a `.env` file:
 ```
 GITHUB_TOKEN=ghp_your_token_here
 GITHUB_REPO=owner/repo
+BABYSIT_SECRET=your-secret-here
 ```
 
 The token needs the `repo` scope (to create issues, labels, and upload screenshots).
