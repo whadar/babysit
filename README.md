@@ -7,7 +7,8 @@
 Watch a quick walkthrough of the project:
 
 
-[![Project walkthrough](https://cdn.loom.com/sessions/thumbnails/7880d391450a470bbb2fd6f5297e9f51-c7025fe7f4538dcb-full-play.gif)](https://www.loom.com/share/7880d391450a470bbb2fd6f5297e9f51)
+[![Project walkthrough](<img width="821" height="476" alt="image" src="https://github.com/user-attachments/assets/cc159455-1514-49ed-b82d-3b32ba449b83" />
+)](https://www.loom.com/share/7880d391450a470bbb2fd6f5297e9f51)
 
 ## Why
 
