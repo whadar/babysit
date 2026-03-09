@@ -1,6 +1,4 @@
 const { Octokit } = require("@octokit/rest")
-const fs = require("fs")
-const path = require("path")
 
 const token = process.env.GITHUB_TOKEN
 const repoStr = process.env.GITHUB_REPO
@@ -71,14 +69,19 @@ function formatBody({ prompt, context, meta }) {
   return body
 }
 
-function saveScreenshot(dataUrl, issueNumber) {
+async function uploadScreenshot(dataUrl, issueNumber) {
   const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "")
   const ext = dataUrl.startsWith("data:image/png") ? "png" : "jpg"
-  const filename = `${Date.now()}-${issueNumber}.${ext}`
-  const dir = path.resolve(process.cwd(), "babysit-screenshots")
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-  fs.writeFileSync(path.join(dir, filename), Buffer.from(base64, "base64"))
-  return { filename, ext }
+  const filepath = `babysit-screenshots/${Date.now()}-${issueNumber}.${ext}`
+
+  const { data } = await octokit.repos.createOrUpdateFileContents({
+    owner, repo,
+    path: filepath,
+    message: `babysit: screenshot for #${issueNumber}`,
+    content: base64,
+  })
+
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${data.commit.sha}/${filepath}`
 }
 
 async function createIssue({ prompt, screenshot, context, meta, ip }) {
@@ -94,21 +97,19 @@ async function createIssue({ prompt, screenshot, context, meta, ip }) {
 
   if (screenshot) {
     try {
-      const { filename } = saveScreenshot(screenshot, issue.number)
-      const port = process.env.BABYSIT_PORT || 5678
-      const imageUrl = `http://localhost:${port}/screenshots/${filename}`
+      const imageUrl = await uploadScreenshot(screenshot, issue.number)
       await octokit.issues.createComment({
         owner, repo,
         issue_number: issue.number,
         body: `### Screenshot\n![screenshot](${imageUrl})`,
       })
-      console.log(`[babysit] screenshot saved: ${imageUrl}`)
+      console.log(`[babysit] screenshot uploaded: ${imageUrl}`)
     } catch (err) {
-      console.error("[babysit] screenshot failed:", err.message)
+      console.error("[babysit] screenshot upload failed — token needs contents:write permission:", err.message)
     }
   }
 
   return { issueUrl: issue.html_url, issueNumber: issue.number }
 }
 
-module.exports = { createIssue, saveScreenshot }
+module.exports = { createIssue }

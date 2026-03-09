@@ -28,8 +28,15 @@
   function captureScreenshot() {
     return loadHtml2Canvas()
       .then((h2c) => h2c(document.body, { useCORS: true, scale: 1, logging: false }))
-      .then((canvas) => canvas.toDataURL("image/jpeg", 0.75))
-      .catch(() => null)
+      .then((canvas) => {
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.75)
+        console.log("[babysit] screenshot captured, size:", dataUrl.length)
+        return dataUrl
+      })
+      .catch((err) => {
+        console.warn("[babysit] screenshot capture failed:", err)
+        return null
+      })
   }
 
   function collectContext() {

@@ -15,7 +15,7 @@ Ship the same widget to your beta users and let them report issues directly from
 
 ## Auto-fixing with GitHub Actions
 
-Trigger a workflow on every new Babysit issue to auto-triage, ping your team, or have Claude take a first pass at the fix.
+Trigger a workflow on every new Babysit issue to auto-triage, ping your team, or have Claude (or any AI) take a first pass at the fix.
 
 ---
 
@@ -32,7 +32,9 @@ GITHUB_TOKEN=ghp_your_token_here
 GITHUB_REPO=owner/repo
 ```
 
-The token needs the `repo` scope (to create issues and labels).
+The token needs the `repo` scope (to create issues, labels, and upload screenshots).
+
+For fine-grained tokens, enable **Issues: Read & Write** and **Contents: Read & Write** on the target repo.
 
 Start the server:
 
@@ -80,7 +82,7 @@ browser widget  →  POST /report  →  github.js  →  GitHub Issue
 
 | Env var | Required | Description |
 |---|---|---|
-| `GITHUB_TOKEN` | ✓ | Personal access token with `repo` scope |
+| `GITHUB_TOKEN` | ✓ | Personal access token with `repo` scope (or fine-grained: `issues:write` + `contents:write`) |
 | `GITHUB_REPO` | ✓ | Target repo in `owner/repo` format |
 | `BABYSIT_PORT` | — | Server port (default: `5678`) |
 
