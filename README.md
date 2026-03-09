@@ -68,14 +68,54 @@ Add the widget to your app's dev HTML:
 
 ## Architecture
 
+Two server modes — same widget, different `server` URL:
+
 ```
-browser widget  →  POST /report  →  github.js  →  GitHub Issue
-(widget.js)        (server.js)      (octokit)
+browser widget  →  POST /report  →  server.js / worker  →  GitHub Issue
 ```
 
 - `widget.js` — single script tag, no dependencies
-- `server.js` — Express server, writes local `.md` backups
-- `github.js` — octokit issue creation, label inference
+- `server.js` — local Express server for dev use
+- `worker/` — Cloudflare Worker for production / beta users
+- `github.js` — issue creation, label inference (used by local server)
+
+---
+
+## Deploying to production (Cloudflare Worker)
+
+For beta users or static frontends with no backend, deploy the included Worker:
+
+```bash
+cd worker
+npm install
+```
+
+Set your secrets:
+
+```bash
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put BABYSIT_SECRET
+```
+
+Update `GITHUB_REPO` in `worker/wrangler.toml`, then deploy:
+
+```bash
+npm run deploy
+```
+
+Point the widget at your Worker URL:
+
+```html
+<script src="https://your-worker.workers.dev/widget.js"></script>
+<script>
+  Babysit.init({
+    trigger: "/",
+    server: "https://your-worker.workers.dev",
+    secret: "your-secret-here",
+    context: () => ({ /* optional app state */ })
+  })
+</script>
+```
 
 ---
 

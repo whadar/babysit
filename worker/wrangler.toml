@@ -1,0 +1,10 @@
+name = "babysit"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+GITHUB_REPO = "owner/repo"
+
+# Secrets (set via CLI, not here):
+# wrangler secret put GITHUB_TOKEN
+# wrangler secret put BABYSIT_SECRET
