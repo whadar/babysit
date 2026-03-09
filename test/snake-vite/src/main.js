@@ -2,9 +2,9 @@ import './style.css'
 import { draw as _draw, TICK as _TICK } from './draw.js'
 import { startMusic, toggleMusic } from './music.js'
 
-const CELL = 20
-const COLS = 30
-const ROWS = 30
+const CELL = 22
+const COLS = 24
+const ROWS = 24
 
 let drawFn = _draw
 let TICK = _TICK
@@ -121,7 +121,7 @@ function loadWidget() {
         trigger: '/',
         server: 'http://localhost:5678',
         repo: 'whadar/babysit',
-        position: 'left',
+        position: 'bottom',
         autoOpen: true,
         button: true,
         context: () => window.__snakeState?.() ?? {},
