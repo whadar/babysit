@@ -31,8 +31,9 @@ Create a `.env` file:
 ```
 GITHUB_TOKEN=ghp_your_token_here
 GITHUB_REPO=owner/repo
-BABYSIT_SECRET=your-secret-here
 ```
+
+`BABYSIT_SECRET` is optional for local dev — omit it and the server accepts all requests.
 
 The token needs the `repo` scope (to create issues, labels, and upload screenshots).
 
@@ -52,7 +53,6 @@ Add the widget to your app's dev HTML:
   Babysit.init({
     trigger: "/",
     server: "http://localhost:5678",
-    secret: "your-secret-here", // must match BABYSIT_SECRET on the server
     context: () => ({ /* optional app state */ })
   })
 </script>
