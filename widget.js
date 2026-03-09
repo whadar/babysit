@@ -1,7 +1,7 @@
 ;(function () {
   const DEFAULT_SERVER = "http://localhost:5678"
   const DEFAULT_TRIGGER = "/"
-  const VERSION = "0.2.5"
+  const VERSION = "0.2.7"
 
   let config = {
     trigger: DEFAULT_TRIGGER,
