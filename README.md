@@ -2,7 +2,11 @@
 
 > Press `/` in your browser to file a GitHub issue with screenshot and app state — straight from your dev session.
 
-<img width="823" height="832" alt="image" src="https://github.com/user-attachments/assets/0b7734dc-b919-4eb7-b9e7-48bda4864e70" />
+## Demo
+
+Watch a quick walkthrough of the project:
+
+[![Project walkthrough](https://cdn.loom.com/sessions/thumbnails/7880d391450a470bbb2fd6f5297e9f51-with-play.gif)](https://www.loom.com/share/7880d391450a470bbb2fd6f5297e9f51)
 
 ## Why
 
