@@ -1,7 +1,7 @@
 ;(function () {
   const DEFAULT_SERVER = "http://localhost:5678"
   const DEFAULT_TRIGGER = "/"
-  const VERSION = "0.2.7"
+  const VERSION = "0.2.8"
 
   let config = {
     trigger: DEFAULT_TRIGGER,
@@ -217,7 +217,7 @@
     setTimeout(() => t.remove(), 2300)
   }
 
-  function showIssueToast(issueNumber, issueUrl) {
+  function showIssueToast(issueNumber, issueUrl, action) {
     const t = document.createElement("div")
     t.style.cssText = `
       position: fixed;
@@ -239,7 +239,8 @@
     link.href = issueUrl
     link.target = "_blank"
     link.rel = "noopener noreferrer"
-    link.textContent = `✓ #${issueNumber} opened →`
+    const label = action === "closed" ? "closed" : action === "comment" ? "commented" : "opened"
+    link.textContent = `✓ #${issueNumber} ${label} →`
     link.style.cssText = `color: #4ade80; text-decoration: none;`
     t.appendChild(link)
     document.body.appendChild(t)
@@ -276,7 +277,7 @@
       .then(({ ok, status, data }) => {
         if (ok && data.issueUrl) {
           console.log("[babysit] issue:", data.issueUrl)
-          showIssueToast(data.issueNumber, data.issueUrl)
+          showIssueToast(data.issueNumber, data.issueUrl, data.action)
         } else if (status === 401) {
           console.error("[babysit] unauthorized — check BABYSIT_SECRET")
           showToast("✗ unauthorized", "#2e1a1a")
@@ -284,8 +285,9 @@
           console.warn("[babysit] rate limit exceeded")
           showToast("✗ rate limit exceeded", "#2e1a1a")
         } else {
-          console.warn("[babysit] server responded with", status)
-          showToast("✗ server error " + status, "#2e1a1a")
+          const msg = data?.error || `server error ${status}`
+          console.warn("[babysit] error:", msg)
+          showToast("✗ " + msg, "#2e1a1a")
         }
       })
       .catch((err) => {

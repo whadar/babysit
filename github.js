@@ -88,21 +88,45 @@ async function uploadScreenshot(dataUrl, issueNumber, owner, repo) {
   return data.content.download_url
 }
 
-async function createIssue({ prompt, screenshot, context, repo: payloadRepo, meta, ip }) {
+function parseIntent(prompt) {
+  const match = prompt.match(/#(\d+)/)
+  const issueNumber = match ? parseInt(match[1], 10) : null
+  const shouldClose = /\bfixed\b/i.test(prompt)
+  return { issueNumber, shouldClose }
+}
+
+async function handleReport({ prompt, screenshot, context, repo: payloadRepo, meta, ip }) {
   if (ip) meta = { ...meta, ip }
   const [owner, repo] = payloadRepo ? payloadRepo.split("/") : [envOwner, envRepo]
-  const label = inferLabel(prompt)
+
+  const { issueNumber, shouldClose } = parseIntent(prompt)
 
   let screenshotUrl = null
   if (screenshot) {
     try {
-      screenshotUrl = await uploadScreenshot(screenshot, "pending", owner, repo)
+      screenshotUrl = await uploadScreenshot(screenshot, issueNumber || "pending", owner, repo)
       console.log(`[babysit] screenshot uploaded: ${screenshotUrl}`)
     } catch (err) {
       console.error("[babysit] screenshot upload failed — token needs contents:write permission:", err.message)
     }
   }
 
+  if (issueNumber) {
+    const { data: comment } = await octokit.issues.createComment({
+      owner, repo,
+      issue_number: issueNumber,
+      body: formatBody({ prompt, context, meta, screenshotUrl }),
+    })
+
+    if (shouldClose) {
+      await octokit.issues.update({ owner, repo, issue_number: issueNumber, state: "closed" })
+    }
+
+    const { data: issue } = await octokit.issues.get({ owner, repo, issue_number: issueNumber })
+    return { issueUrl: issue.html_url, issueNumber, action: shouldClose ? "closed" : "comment" }
+  }
+
+  const label = inferLabel(prompt)
   const { data: issue } = await octokit.issues.create({
     owner, repo,
     title: prompt.split("\n")[0].slice(0, 72),
@@ -110,7 +134,7 @@ async function createIssue({ prompt, screenshot, context, repo: payloadRepo, met
     labels: ["babysit", label],
   })
 
-  return { issueUrl: issue.html_url, issueNumber: issue.number }
+  return { issueUrl: issue.html_url, issueNumber: issue.number, action: "created" }
 }
 
-module.exports = { createIssue }
+module.exports = { handleReport }

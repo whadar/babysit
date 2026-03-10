@@ -102,25 +102,48 @@ async function uploadScreenshot(token, owner, repo, dataUrl, issueNumber) {
   return data.content.download_url
 }
 
-async function createIssue({ token, owner, repo, prompt, screenshot, context, meta }) {
-  const label = inferLabel(prompt)
+function parseIntent(prompt) {
+  const match = prompt.match(/#(\d+)/)
+  const issueNumber = match ? parseInt(match[1], 10) : null
+  const shouldClose = /\bfixed\b/i.test(prompt)
+  return { issueNumber, shouldClose }
+}
+
+async function handleReport({ token, owner, repo, prompt, screenshot, context, meta }) {
+  const { issueNumber, shouldClose } = parseIntent(prompt)
 
   let screenshotUrl = null
   if (screenshot) {
     try {
-      screenshotUrl = await uploadScreenshot(token, owner, repo, screenshot, "pending")
+      screenshotUrl = await uploadScreenshot(token, owner, repo, screenshot, issueNumber || "pending")
     } catch (err) {
       console.error("screenshot upload failed:", err.message)
     }
   }
 
+  if (issueNumber) {
+    await githubFetch(token, `/repos/${owner}/${repo}/issues/${issueNumber}/comments`, "POST", {
+      body: formatBody({ prompt, context, meta, screenshotUrl }),
+    })
+
+    if (shouldClose) {
+      await githubFetch(token, `/repos/${owner}/${repo}/issues/${issueNumber}`, "PATCH", {
+        state: "closed",
+      })
+    }
+
+    const issue = await githubFetch(token, `/repos/${owner}/${repo}/issues/${issueNumber}`, "GET")
+    return { issueUrl: issue.html_url, issueNumber, action: shouldClose ? "closed" : "comment" }
+  }
+
+  const label = inferLabel(prompt)
   const issue = await githubFetch(token, `/repos/${owner}/${repo}/issues`, "POST", {
     title: prompt.split("\n")[0].slice(0, 72),
     body: formatBody({ prompt, context, meta, screenshotUrl }),
     labels: ["babysit", label],
   })
 
-  return { issueUrl: issue.html_url, issueNumber: issue.number }
+  return { issueUrl: issue.html_url, issueNumber: issue.number, action: "created" }
 }
 
 export default {
@@ -167,7 +190,7 @@ export default {
       const enrichedMeta = { ...meta, ip, userAgent }
 
       try {
-        const result = await createIssue({
+        const result = await handleReport({
           token: env.GITHUB_TOKEN,
           owner, repo,
           prompt, screenshot, context,

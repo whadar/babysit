@@ -2,7 +2,7 @@ const express = require("express")
 const cors = require("cors")
 const fs = require("fs")
 const path = require("path")
-const { createIssue } = require("./github")
+const { handleReport } = require("./github")
 
 const app = express()
 app.use(cors())
@@ -76,10 +76,10 @@ app.post("/report", async (req, res) => {
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress
     const userAgent = req.headers["user-agent"]
     const enrichedMeta = { ...meta, ip, userAgent }
-    const result = await createIssue({ prompt, screenshot, context, repo, meta: enrichedMeta })
+    const result = await handleReport({ prompt, screenshot, context, repo, meta: enrichedMeta })
 
-    console.log(`[babysit] issue created: ${result.issueUrl}`)
-    res.json({ issueUrl: result.issueUrl, issueNumber: result.issueNumber })
+    console.log(`[babysit] issue ${result.action}: ${result.issueUrl}`)
+    res.json({ issueUrl: result.issueUrl, issueNumber: result.issueNumber, action: result.action })
   } catch (err) {
     console.error("[babysit] github error:", err.message)
     res.status(500).json({ error: err.message })
