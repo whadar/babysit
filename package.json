@@ -1,6 +1,6 @@
 {
   "name": "babysit",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Press / in your browser to file a GitHub issue with screenshot and app state — straight from your dev session.",
   "main": "index.js",
   "bin": {
@@ -10,7 +10,8 @@
     "index.js",
     "server.js",
     "github.js",
-    "widget.js"
+    "widget.js",
+    "vite-plugin-babysit.js"
   ],
   "scripts": {
     "start": "node index.js"

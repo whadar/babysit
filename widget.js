@@ -1,12 +1,14 @@
 ;(function () {
   const DEFAULT_SERVER = "http://localhost:5678"
   const DEFAULT_TRIGGER = "/"
-  const VERSION = "0.2.8"
+  const VERSION = "0.2.9"
+  const H2C_CDN = "https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"
 
   let config = {
     trigger: DEFAULT_TRIGGER,
-    server: DEFAULT_SERVER,
+    server: null,
     secret: null,
+    token: null,
     repo: null,
     position: "bottom",
     autoOpen: false,
@@ -24,7 +26,7 @@
     return new Promise((resolve, reject) => {
       if (window.html2canvas) return resolve(window.html2canvas)
       const s = document.createElement("script")
-      s.src = config.server + "/html2canvas.min.js"
+      s.src = config.server ? config.server + "/html2canvas.min.js" : H2C_CDN
       s.onload = () => resolve(window.html2canvas)
       s.onerror = () => reject(new Error("failed to load html2canvas"))
       document.head.appendChild(s)
@@ -248,10 +250,113 @@
     setTimeout(() => t.remove(), 4500)
   }
 
+  function parseIntent(prompt) {
+    const match = prompt.match(/#(\d+)/)
+    const issueNumber = match ? parseInt(match[1], 10) : null
+    const shouldClose = /\bfixed\b/i.test(prompt)
+    return { issueNumber, shouldClose }
+  }
+
+  function ghFetch(path, method, body) {
+    return fetch("https://api.github.com" + path, {
+      method: method || "GET",
+      headers: {
+        Authorization: "Bearer " + config.token,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    }).then((r) => r.json().then((d) => { if (!r.ok) throw new Error(d.message || "GitHub error " + r.status); return d }))
+  }
+
+  function inferLabel(prompt) {
+    const p = prompt.toLowerCase()
+    if (/^(fix|bug)/.test(p)) return "bug"
+    if (/^(why|what)/.test(p)) return "question"
+    if (/^(improve|refine)/.test(p)) return "enhancement"
+    return "feedback"
+  }
+
+  function formatMeta(meta) {
+    let body = "### Report\n"
+    body += `**URL:** ${meta?.url || "unknown"}\n`
+    body += `**Time:** ${meta?.timestamp ? new Date(meta.timestamp).toLocaleString() : new Date().toLocaleString()}\n`
+    body += `**Viewport:** ${meta?.viewport || "unknown"}\n`
+    body += `**Session:** \`${meta?.sessionId || ""}\`\n`
+    return body
+  }
+
+  function formatCommentBody({ prompt, context, meta, screenshotUrl }) {
+    let body = formatMeta(meta)
+    const ctx = context && Object.keys(context).length > 0
+    if (ctx) body += `\n### App State\n\`\`\`json\n${JSON.stringify(context, null, 2)}\n\`\`\`\n`
+    if (screenshotUrl) body += `\n### Screenshot\n![screenshot](${screenshotUrl})\n`
+    body += "\n---\n*submitted via Babysit*"
+    return body
+  }
+
+  async function uploadScreenshotBrowser(dataUrl, label, owner, repo) {
+    const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "")
+    const ext = dataUrl.startsWith("data:image/png") ? "png" : "jpg"
+    const filepath = `babysit-screenshots/${Date.now()}-${label}.${ext}`
+    const data = await ghFetch(`/repos/${owner}/${repo}/contents/${filepath}`, "PUT", {
+      message: `babysit: screenshot for #${label}`,
+      content: base64,
+    })
+    return `https://raw.githubusercontent.com/${owner}/${repo}/main/${filepath}`
+  }
+
+  async function submitBrowser(prompt) {
+    const [owner, repo] = config.repo.split("/")
+    const meta = { url: location.href, timestamp: new Date().toISOString(), viewport: `${window.innerWidth}x${window.innerHeight}`, sessionId }
+    const context = collectContext()
+    const { issueNumber, shouldClose } = parseIntent(prompt)
+
+    let screenshotUrl = null
+    if (pendingScreenshot) {
+      try {
+        screenshotUrl = await uploadScreenshotBrowser(pendingScreenshot, issueNumber || "pending", owner, repo)
+      } catch (err) {
+        console.warn("[babysit] screenshot upload failed:", err.message)
+      }
+    }
+
+    const body = formatCommentBody({ prompt, context, meta, screenshotUrl })
+
+    if (issueNumber) {
+      await ghFetch(`/repos/${owner}/${repo}/issues/${issueNumber}/comments`, "POST", { body })
+      if (shouldClose) await ghFetch(`/repos/${owner}/${repo}/issues/${issueNumber}`, "PATCH", { state: "closed" })
+      const issue = await ghFetch(`/repos/${owner}/${repo}/issues/${issueNumber}`)
+      return { issueUrl: issue.html_url, issueNumber, action: shouldClose ? "closed" : "comment" }
+    }
+
+    const issue = await ghFetch(`/repos/${owner}/${repo}/issues`, "POST", {
+      title: prompt.split("\n")[0].slice(0, 72),
+      body,
+      labels: ["babysit", inferLabel(prompt)],
+    })
+    return { issueUrl: issue.html_url, issueNumber: issue.number, action: "created" }
+  }
+
+  function handleResult(data) {
+    console.log("[babysit] issue:", data.issueUrl)
+    showIssueToast(data.issueNumber, data.issueUrl, data.action)
+  }
+
   function submit(prompt) {
     hideOverlay()
     showToast("⏳ sending…")
 
+    if (config.token) {
+      submitBrowser(prompt).then(handleResult).catch((err) => {
+        console.error("[babysit] error:", err)
+        showToast("✗ " + err.message, "#2e1a1a")
+      })
+      return
+    }
+
+    const server = config.server || DEFAULT_SERVER
     const payload = {
       prompt,
       screenshot: pendingScreenshot || null,
@@ -268,7 +373,7 @@
     const headers = { "Content-Type": "application/json" }
     if (config.secret) headers["x-babysit-secret"] = config.secret
 
-    fetch(config.server + "/report", {
+    fetch(server + "/report", {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
@@ -276,8 +381,7 @@
       .then((res) => res.json().then((data) => ({ ok: res.ok, status: res.status, data })))
       .then(({ ok, status, data }) => {
         if (ok && data.issueUrl) {
-          console.log("[babysit] issue:", data.issueUrl)
-          showIssueToast(data.issueNumber, data.issueUrl, data.action)
+          handleResult(data)
         } else if (status === 401) {
           console.error("[babysit] unauthorized — check BABYSIT_SECRET")
           showToast("✗ unauthorized", "#2e1a1a")
@@ -358,6 +462,7 @@
       if (opts.trigger) config.trigger = opts.trigger
       if (opts.server) config.server = opts.server
       if (opts.secret) config.secret = opts.secret
+      if (opts.token) config.token = opts.token
       if (opts.repo) config.repo = opts.repo
       if (opts.position) config.position = opts.position
       if (opts.autoOpen) config.autoOpen = opts.autoOpen

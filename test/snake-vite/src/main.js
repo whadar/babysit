@@ -109,40 +109,15 @@ function loop(ts) {
 }
 requestAnimationFrame(loop)
 
-function loadWidget() {
-  document.getElementById('__babysit_script')?.remove()
-  delete window.Babysit
-  const s = document.createElement('script')
-  s.id = '__babysit_script'
-  s.src = 'http://localhost:5678/widget.js?' + Date.now()
-  s.onload = () => {
-    if (window.Babysit) {
-      Babysit.init({
-        trigger: '/',
-        server: 'http://localhost:5678',
-        repo: 'whadar/babysit',
-        position: 'bottom',
-        autoOpen: true,
-        button: true,
-        context: () => window.__snakeState?.() ?? {},
-      })
-      console.log('[babysit] widget ready')
-    }
+window.addEventListener('load', () => {
+  if (window.Babysit) {
+    Babysit.addContext(() => window.__snakeState?.() ?? {})
   }
-  s.onerror = () => console.warn('[babysit] widget failed to load — is the server running on :5678?')
-  document.body.appendChild(s)
-}
-
-loadWidget()
+})
 
 if (import.meta.hot) {
   import.meta.hot.accept('./draw.js', (newModule) => {
     drawFn = newModule.draw
     TICK = newModule.TICK
   })
-  import.meta.hot.dispose(() => {
-    document.getElementById('__babysit_script')?.remove()
-    delete window.Babysit
-  })
-  import.meta.hot.accept()
 }
