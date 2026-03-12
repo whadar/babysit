@@ -32,15 +32,19 @@ export default function babysitPlugin(opts = {}) {
       const root = ctx?.server?.config?.root || process.cwd()
       const env = loadEnv(root)
 
-      const token = opts.token || env.BABYSIT_TOKEN || env.GITHUB_TOKEN
-      const repo = opts.repo || env.BABYSIT_REPO || env.GITHUB_REPO
+      const token = opts.token || env.BABYSIT_TOKEN
+      const repo = opts.repo || env.BABYSIT_REPO
       const trigger = opts.trigger || env.BABYSIT_TRIGGER || "/"
       const position = opts.position || env.BABYSIT_POSITION || "bottom"
       const autoOpen = opts.autoOpen ?? (env.BABYSIT_AUTO_OPEN === "true") ?? false
       const button = opts.button ?? (env.BABYSIT_BUTTON === "true") ?? true
 
-      if (!token || !repo) {
-        console.warn("[babysit] vite plugin: missing BABYSIT_TOKEN or BABYSIT_REPO in .env — skipping widget injection")
+      if (!token) {
+        console.warn("[babysit] vite plugin: missing BABYSIT_TOKEN in .env — skipping widget injection")
+        return html
+      }
+      if (!repo) {
+        console.warn("[babysit] vite plugin: missing BABYSIT_REPO in .env or opts.repo — skipping widget injection")
         return html
       }
 
