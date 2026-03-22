@@ -22,19 +22,21 @@ Trigger a workflow on every new Babysit issue to auto-triage, ping your team, or
 
 ## Setup
 
-### 1. Create a GitHub token
+> **No local server required.** The widget talks to GitHub directly from the browser.
 
-Go to **[github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens)** and create a fine-grained token with:
+### Step 1 — Create a GitHub token
+
+Go to **[github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens)**, create a fine-grained token scoped to your target repo with:
 - **Issues:** Read & Write
 - **Contents:** Read & Write (for screenshots)
 
 ---
 
-### 2. Choose a mode
+### Step 2 — Add to your app
 
-#### Vite plugin (recommended — zero config in app code)
+#### Option A: Vite plugin (zero config in app code)
 
-Add to `.env`:
+Add to `.env` (gitignored):
 ```
 BABYSIT_TOKEN=ghp_your_token_here
 ```
@@ -42,14 +44,19 @@ BABYSIT_TOKEN=ghp_your_token_here
 Add to `vite.config.js`:
 ```js
 import babysit from 'babysit/vite-plugin-babysit.js'
-export default { plugins: [babysit({ repo: 'owner/repo' })] }
+
+export default {
+  plugins: [
+    babysit({ repo: 'owner/repo' })
+  ]
+}
 ```
 
-Done. The widget is injected automatically during `vite dev`. No server needed.
+The widget is injected automatically on `vite dev`. Nothing else needed.
 
 ---
 
-#### Browser mode (any framework)
+#### Option B: Plain HTML / any framework
 
 ```html
 <script src="https://unpkg.com/babysit/widget.js"></script>
@@ -57,36 +64,30 @@ Done. The widget is injected automatically during `vite dev`. No server needed.
   Babysit.init({
     token: "ghp_your_token_here",
     repo: "owner/repo",
-    context: () => ({ /* optional app state */ })
+    context: () => ({ /* optional: attach app state to every report */ })
   })
 </script>
 ```
 
-No server needed. The widget calls the GitHub API directly from the browser.
-
 ---
 
-#### Local server mode (token stays server-side)
+#### Option C: Local server (keep token server-side)
 
-Create a `.env` file:
+Use this only if you need the token to stay out of the browser (e.g. shared staging environments).
+
 ```
 GITHUB_TOKEN=ghp_your_token_here
 GITHUB_REPO=owner/repo
 ```
 
-Start the server:
 ```bash
 npx babysit
 ```
 
-Add the widget:
 ```html
 <script src="http://localhost:5678/widget.js"></script>
 <script>
-  Babysit.init({
-    server: "http://localhost:5678",
-    context: () => ({ /* optional app state */ })
-  })
+  Babysit.init({ server: "http://localhost:5678" })
 </script>
 ```
 
