@@ -454,7 +454,8 @@
     if (document.getElementById("__babysit_btn")) return
     const btn = document.createElement("button")
     btn.id = "__babysit_btn"
-    btn.textContent = "🍼"
+    const isLocal = /^(localhost|127\.|::1)/.test(location.hostname)
+    btn.textContent = isLocal ? "🍼" : "🐛"
     btn.title = "Report issue"
     btn.style.cssText = `
       position: fixed;
