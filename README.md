@@ -75,15 +75,18 @@ The widget is injected automatically on `vite dev`. Nothing else needed.
 
 Use this only if you need the token to stay out of the browser (e.g. shared staging environments).
 
+Add to `.env`:
 ```
 GITHUB_TOKEN=ghp_your_token_here
 GITHUB_REPO=owner/repo
 ```
 
+Start the Babysit server (this is what runs on `:5678`):
 ```bash
 npx babysit
 ```
 
+Then add the widget — it loads from the same server and connects to it automatically:
 ```html
 <script src="http://localhost:5678/widget.js"></script>
 <script>
