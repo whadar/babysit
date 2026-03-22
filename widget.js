@@ -1,7 +1,7 @@
 ;(function () {
   const DEFAULT_SERVER = "http://localhost:5678"
   const DEFAULT_TRIGGER = "/"
-  const VERSION = "0.2.9"
+  const VERSION = "0.3.0"
   const H2C_CDN = "https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"
 
   let config = {
@@ -339,6 +339,31 @@
     return { issueUrl: issue.html_url, issueNumber: issue.number, action: "created" }
   }
 
+  function showTokenMissingToast() {
+    const t = document.createElement("div")
+    t.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #2e1a1a;
+      border: 1px solid #5a2a2a;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: #eee;
+      z-index: 999999;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+      pointer-events: auto;
+      line-height: 1.5;
+    `
+    t.innerHTML = `\u2717 No token set. <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener noreferrer" style="color:#f87171;text-decoration:underline;">Create a GitHub token \u2192</a>`
+    document.body.appendChild(t)
+    setTimeout(() => { t.style.opacity = "0" }, 6000)
+    setTimeout(() => t.remove(), 6500)
+  }
+
   function handleResult(data) {
     console.log("[babysit] issue:", data.issueUrl)
     showIssueToast(data.issueNumber, data.issueUrl, data.action)
@@ -353,6 +378,11 @@
         console.error("[babysit] error:", err)
         showToast("✗ " + err.message, "#2e1a1a")
       })
+      return
+    }
+
+    if (!config.server && !config.token) {
+      showTokenMissingToast()
       return
     }
 

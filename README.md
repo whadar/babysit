@@ -22,40 +22,72 @@ Trigger a workflow on every new Babysit issue to auto-triage, ping your team, or
 
 ## Setup
 
-Create a `.env` file in your project root:
+### 1. Create a GitHub token
 
+Go to **[github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens)** and create a fine-grained token with:
+- **Issues:** Read & Write
+- **Contents:** Read & Write (for screenshots)
+
+---
+
+### 2. Choose a mode
+
+#### Vite plugin (recommended — zero config in app code)
+
+Add to `.env`:
 ```
-GITHUB_TOKEN=ghp_your_token_here
-GITHUB_REPO=owner/repo
+BABYSIT_TOKEN=ghp_your_token_here
 ```
 
-For fine-grained tokens, enable **Issues: Read & Write** and **Contents: Read & Write** on the target repo.
-
-`BABYSIT_SECRET` is optional for local dev — omit it and the server accepts all requests.
-
-Start the server:
-
-```bash
-npx babysit
+Add to `vite.config.js`:
+```js
+import babysit from 'babysit/vite-plugin-babysit.js'
+export default { plugins: [babysit({ repo: 'owner/repo' })] }
 ```
 
-Add the widget to your app's HTML:
+Done. The widget is injected automatically during `vite dev`. No server needed.
+
+---
+
+#### Browser mode (any framework)
 
 ```html
-<script src="http://localhost:5678/widget.js"></script>
+<script src="https://unpkg.com/babysit/widget.js"></script>
 <script>
   Babysit.init({
-    trigger: "/",
-    server: "http://localhost:5678",
+    token: "ghp_your_token_here",
+    repo: "owner/repo",
     context: () => ({ /* optional app state */ })
   })
 </script>
 ```
 
-Or load directly from npm via unpkg (no local server required for the script tag):
+No server needed. The widget calls the GitHub API directly from the browser.
 
+---
+
+#### Local server mode (token stays server-side)
+
+Create a `.env` file:
+```
+GITHUB_TOKEN=ghp_your_token_here
+GITHUB_REPO=owner/repo
+```
+
+Start the server:
+```bash
+npx babysit
+```
+
+Add the widget:
 ```html
-<script src="https://unpkg.com/babysit/widget.js"></script>
+<script src="http://localhost:5678/widget.js"></script>
+<script>
+  Babysit.init({
+    server: "http://localhost:5678",
+    context: () => ({ /* optional app state */ })
+  })
+</script>
 ```
 
 ---
@@ -70,14 +102,14 @@ Or load directly from npm via unpkg (no local server required for the script tag
 
 ## Architecture
 
-Two server modes — same widget, different `server` URL:
-
 ```
-browser widget  →  POST /report  →  server.js / worker  →  GitHub Issue
+[browser-mode]  widget.js  →  GitHub API directly
+[server-mode]   widget.js  →  POST /report  →  server.js / worker  →  GitHub API
 ```
 
 - `widget.js` — single script tag, no dependencies
-- `server.js` — local Express server for dev use
+- `vite-plugin-babysit.js` — injects widget + token from `.env` during Vite dev
+- `server.js` — local Express server (token stays server-side)
 - `worker/` — Cloudflare Worker for production / beta users
 - `github.js` — issue creation, label inference (used by local server)
 
@@ -151,7 +183,9 @@ npm run deploy
 
 | Option | Default | Description |
 |---|---|---|
-| `server` | `http://localhost:5678` | URL of the Babysit server or Worker |
+| `token` | — | GitHub personal access token ([create one →](https://github.com/settings/personal-access-tokens)). Use for browser-mode (no server needed). |
+| `repo` | — | Target repo in `owner/repo` format. Required in browser-mode. |
+| `server` | `http://localhost:5678` | URL of the Babysit server or Worker. Used when `token` is not set. |
 | `trigger` | `/` | Key that opens the overlay |
 | `secret` | — | Must match `BABYSIT_SECRET` on the server |
 | `autoOpen` | `false` | Open the overlay automatically on page load |
